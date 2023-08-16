@@ -1,0 +1,5 @@
+maskinporten:
+  validation:
+    environment: dev
+
+TP_FSS_URL: http://localhost:8080

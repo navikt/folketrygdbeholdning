@@ -1,0 +1,9 @@
+AZURE_APP_CLIENT_ID: "3e5b24e9-7467-42a3-bad2-51b1f31e1031"
+AZURE_OPENID_CONFIG_TOKEN_ENDPOINT: "https://login.microsoftonline.com/966ac572-f5b7-4bbe-aa88-c76419c0f851/oauth2/v2.0/token"
+AZURE_OPENID_CONFIG_JWKS_URI: "https://login.microsoftonline.com/966ac572-f5b7-4bbe-aa88-c76419c0f851/discovery/v2.0/keys"
+
+MASKINPORTEN_ISSUER: "https://test.maskinporten.no/"
+TP_FSS_URL: "https://tp-api-q1.dev-fss-pub.nais.io"
+TP_FSS_SCOPE: "api://dev-fss.samhandler.tp-q1/.default"
+
+AZURE_APP_CLIENT_SECRET: "dummyvalue"

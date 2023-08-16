@@ -1,0 +1,53 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: "folketrygdbeholdning"
+  namespace: "pensjonsamhandling"
+  labels:
+    "team": "pensjonsamhandling"
+spec:
+  accessPolicy:
+    outbound:
+      external:
+        - host: "tp-api-q1.dev-fss-pub.nais.io"
+  env:
+    - name: maskinporten.validation.environment
+      value: DEV
+    - name: TP_FSS_URL
+      value: https://tp-api-q1.dev-fss-pub.nais.io
+    - name: SPRING_PROFILES_ACTIVE
+      value: dev
+    - name: LOGGING_CONFIG
+      value: classpath:logback-nais.xml
+    - name: ENVIRONMENT_NAME
+      value: q1
+  image: {{image}}
+  liveness:
+    path: "/actuator/health/liveness"
+    port: 8080
+    initialDelay: 20
+    timeout: 60
+  readiness:
+    path: "/actuator/health/readiness"
+    port: 8080
+    initialDelay: 20
+    timeout: 60
+  replicas:
+    min: 2
+    max: 2
+    cpuThresholdPercentage: 50
+  prometheus:
+    enabled: true
+    path: "/actuator/prometheus"
+  resources:
+    limits:
+      cpu: "10"
+      memory: "256Mi"
+    requests:
+      cpu: "1"
+      memory: "256Mi"
+  ingresses:
+    - https://folketrygdbeholdning.ekstern.dev.nav.no
+  azure:
+    application:
+      enabled: true
