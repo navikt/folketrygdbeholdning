@@ -3,6 +3,7 @@ package no.nav.pensjon.folketrygdbeholdning.controllers
 import no.nav.pensjonsamhandling.maskinporten.validation.annotation.Maskinporten
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.*
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.client.HttpClientErrorException
@@ -34,7 +35,7 @@ class ApiController(
     fun harAFPoffentlig(
         @RequestHeader(FNR) fnr: String,
         @RequestHeader(TPNR) tpnr: String,
-        @RequestHeader(BEHOLDNING_FOM) beholdningFom: LocalDate,
+        @RequestHeader @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) beholdningFom: LocalDate,
         @RequestHeader(CORRELATION_ID, required = false) correlationID: String?,
         @RequestHeader(HttpHeaders.AUTHORIZATION) auth: String): ResponseEntity<String> {
 
