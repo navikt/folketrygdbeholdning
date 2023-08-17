@@ -40,15 +40,15 @@ jobs:
     - name: "Build and push the Docker image"
       run: "docker build --pull --tag ${IMAGE} . && docker push ${IMAGE}"
 
-#  "deployAppToDev":
-#    name: "Deploy app to dev"
-#    needs: "build"
-#    runs-on: "ubuntu-latest"
-#    steps:
-#    - uses: "actions/checkout@v3"
-#    - name: "Deploy to DEV-GCP"
-#      uses: "nais/deploy/actions/deploy@v1"
-#      env:
-#        "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-#        "CLUSTER": "dev-gcp"
-#        "RESOURCE": ".nais/dev.yaml"
+  "deployAppToDev":
+    name: "Deploy app to dev"
+    needs: "build"
+    runs-on: "ubuntu-latest"
+    steps:
+    - uses: "actions/checkout@v3"
+    - name: "Deploy to DEV-GCP"
+      uses: "nais/deploy/actions/deploy@v1"
+      env:
+        "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
+        "CLUSTER": "dev-gcp"
+        "RESOURCE": ".nais/dev.yaml"
