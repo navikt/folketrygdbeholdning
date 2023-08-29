@@ -1,9 +1,28 @@
 spring:
   main:
     banner-mode: off
-
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${MASKINPORTEN_ISSUER}
+          jws-algorithms: RS256, RS384, RS512
+      client:
+        registration:
+          pen-proxy-fss: #navngir ressurs
+            provider: aad
+            client-id: ${AZURE_APP_CLIENT_ID}
+            client-secret: ${AZURE_APP_CLIENT_SECRET}
+            authorization-grant-type: client_credentials
+            scope: ${PEN_PROXY_FSS_SCOPE}
+        provider:
+          aad: #navngir ressurs
+            token-uri: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}
+            jwk-set-uri: ${AZURE_OPENID_CONFIG_JWKS_URI}
 management:
   endpoints:
     web:
       exposure:
         include: health, prometheus
+pen.proxy.fss.client.registration: pen-proxy-fss
+maskinporten.scopes.folketrygdbeholdning: nav:pensjon/v1/tpregisteret
