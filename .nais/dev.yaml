@@ -15,6 +15,10 @@ spec:
       value: DEV
     - name: TP_FSS_URL
       value: https://tp-api-q1.dev-fss-pub.nais.io
+    - name: PEN_PROXY_FSS_URL
+      value: https://pensjon-samhandling-proxy-fss-q1.dev-fss-pub.nais.io
+    - name: PEN_PROXY_FSS_SCOPE
+      value: api://dev-fss.pensjon-samhandling.pensjon-samhandling-proxy-fss-q2/.default
     - name: SPRING_PROFILES_ACTIVE
       value: dev
     - name: LOGGING_CONFIG
