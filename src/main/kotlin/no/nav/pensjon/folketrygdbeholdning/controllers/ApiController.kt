@@ -19,10 +19,13 @@ import java.time.LocalDate
 @RestController
 @RequestMapping("/")
 class ApiController(
-    @Value("\${TP_FSS_URL}") val tpFssUrl: String
+    @Value("\${TP_FSS_URL}") val tpFssUrl: String,
+    private val pensjonProxyFssRestTemplate: RestTemplate,
+    @Value("\${PEN_PROXY_FSS_URL}") val pensjonPenProxyFssUrl: String
 ) {
-    private val restTemplate = RestTemplate()
+    private val tpRestTemplate = RestTemplate()
     private val logger = LoggerFactory.getLogger(javaClass)
+
     companion object {
         const val FNR = "fnr"
         const val TPNR = "tpnr"
@@ -32,26 +35,53 @@ class ApiController(
 
     @GetMapping("/beregning")
     @Maskinporten("nav:pensjon/v1/tpregisteret")
-    fun harAFPoffentlig(
+    fun beregnFolketrygdbeholding(
         @RequestHeader(FNR) fnr: String,
         @RequestHeader(TPNR) tpnr: String,
         @RequestHeader @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) beholdningFom: LocalDate,
         @RequestHeader(CORRELATION_ID, required = false) correlationID: String?,
-        @RequestHeader(HttpHeaders.AUTHORIZATION) auth: String): ResponseEntity<String> {
+        @RequestHeader(HttpHeaders.AUTHORIZATION) auth: String
+    ): ResponseEntity<String> {
+
+        sjekkHarTpForhold(tpnr, fnr, correlationID, auth)
 
         return try {
-            restTemplate.exchange<String>(
-                UriComponentsBuilder.fromUriString("$tpFssUrl/api/samhandler/tjenestepensjon/forhold/$tpnr").build().toString(),
+            pensjonProxyFssRestTemplate.exchange<String>(
+                UriComponentsBuilder.fromUriString("$pensjonPenProxyFssUrl/folketrygdbeholdning/beregning/").build()
+                    .toString(),
+                HttpMethod.GET,
+                HttpEntity<Nothing?>(HttpHeaders()
+                    .apply {
+                        add(FNR, fnr)
+                        add(BEHOLDNING_FOM, beholdningFom.toString())
+                    })
+            ).also { logger.debug("statuscode: ${it.statusCode}, body: ${it.body}") }
+
+        } catch (e: HttpClientErrorException) {
+            throw ResponseStatusException(e.statusCode, e.responseBodyAsString)
+        } catch (e: HttpServerErrorException) {
+            logger.warn("${e.statusCode}-feil fra proxy", e)
+            throw ResponseStatusException(HttpStatus.BAD_GATEWAY)
+        }
+
+
+    }
+
+    private fun sjekkHarTpForhold(tpnr: String, fnr: String, correlationID: String?, auth: String) {
+        try {
+            tpRestTemplate.exchange<String>(
+                UriComponentsBuilder.fromUriString("$tpFssUrl/api/samhandler/tjenestepensjon/forhold/$tpnr").build()
+                    .toString(),
                 HttpMethod.GET,
                 HttpEntity<Nothing?>(HttpHeaders()
                     .apply {
                         add(FNR, fnr)
                         correlationID?.let { add(CORRELATION_ID, it) }
                         add(HttpHeaders.AUTHORIZATION, auth)
-                      })
+                    })
             ).also { logger.debug("statuscode: ${it.statusCode}, body: ${it.body}") }
 
-        } catch(e: HttpClientErrorException) {
+        } catch (e: HttpClientErrorException) {
             throw ResponseStatusException(e.statusCode, e.responseBodyAsString)
         } catch (e: HttpServerErrorException) {
             logger.warn("${e.statusCode}-feil fra proxy", e)
