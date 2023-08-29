@@ -3,3 +3,4 @@ maskinporten:
     environment: dev
 
 TP_FSS_URL: http://localhost:8080
+PEN_PROXY_FSS_URL: http://localhost:8080
