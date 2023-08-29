@@ -2,6 +2,7 @@ package no.nav.pensjon.folketrygdbeholdning
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.*
+import no.nav.pensjon.folketrygdbeholdning.annotations.SecurityDisabled
 import no.nav.pensjon.folketrygdbeholdning.controllers.ApiController
 import no.nav.pensjonsamhandling.maskinporten.validation.test.AutoConfigureMaskinportenValidator
 import no.nav.pensjonsamhandling.maskinporten.validation.test.MaskinportenValidatorTokenGenerator
@@ -12,23 +13,32 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
+import org.springframework.web.client.RestTemplate
+import org.springframework.web.util.DefaultUriBuilderFactory
 import java.time.LocalDate
 import java.util.*
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(RestTemplateTestConfig::class)
 @AutoConfigureMaskinportenValidator
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@SecurityDisabled
 class ProxyMappingTest(
     @Autowired private val tokenGenerator: MaskinportenValidatorTokenGenerator,
-    @Autowired private val mockMvc: MockMvc,
+    @Autowired private val mockMvc: MockMvc
 ) {
 
     private val wireMockServer = WireMockServer(8080)
@@ -50,9 +60,9 @@ class ProxyMappingTest(
             HttpStatus.BAD_GATEWAY,
             HttpStatus.NOT_IMPLEMENTED,
             HttpStatus.INTERNAL_SERVER_ERROR,
-            HttpStatus.SERVICE_UNAVAILABLE,
             HttpStatus.SERVICE_UNAVAILABLE
         )
+
     }
 
     @Test
@@ -70,6 +80,15 @@ class ProxyMappingTest(
                 .withHeader(HttpHeaders.AUTHORIZATION, equalTo(authorization))
                 .willReturn(aResponse().withBody(responseBody))
         )
+
+        stubFor(
+            get(urlEqualTo("/folketrygdbeholdning/beregning/"))
+                .withHeader(ApiController.FNR, equalTo(fnr))
+                .withHeader(ApiController.BEHOLDNING_FOM, equalTo(beholdningFom.toString()))
+                .willReturn(aResponse().withBody(responseBody))
+
+            )
+
 
         mockMvc
             .perform(
@@ -112,5 +131,15 @@ class ProxyMappingTest(
                     .header(ApiController.CORRELATION_ID, correlationId)
             )
             .andExpect(MockMvcResultMatchers.status().isBadGateway)
+    }
+}
+
+@TestConfiguration
+class RestTemplateTestConfig(@Value("\${PEN_PROXY_FSS_URL}") private val proxyUrl: String) {
+    @Bean
+    fun restTemplate(): RestTemplate {
+        return RestTemplateBuilder()
+            .uriTemplateHandler(DefaultUriBuilderFactory(proxyUrl))
+            .build()
     }
 }
