@@ -11,11 +11,15 @@ jobs:
     name: "build"
 
     runs-on: "ubuntu-latest"
+    permissions:
+      contents: "read"
+      id-token: "write"
+      packages: write
     steps:
     - uses: actions/checkout@v3
     - uses: "gradle/wrapper-validation-action@v1"
 
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3.3.1
       with:
         "path": "~/.gradle/caches"
         "key": "${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}"
@@ -32,7 +36,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.READER_TOKEN }}
 
     - name: "Login to GitHub Docker Registry"
-      uses: docker/login-action@v2
+      uses: docker/login-action@v2.2.0
       with:
         "registry": "ghcr.io"
         "username": "${{ github.actor }}"
@@ -45,7 +49,8 @@ jobs:
     name: "Deploy app to dev"
     permissions:
       contents: "read"
-      id-token: "write"  
+      id-token: "write"
+      packages: write
     needs: "build"
     runs-on: "ubuntu-latest"
     steps:
